@@ -1,7 +1,14 @@
 "use client"
 import { useState } from 'react';
 
-const items = [
+type ItemType = 'Fruit' | 'Vegetable';
+
+interface Item {
+    type: ItemType;
+    name: string;
+}
+
+const items: Item[] = [
     { type: 'Fruit', name: 'Apple' },
     { type: 'Vegetable', name: 'Broccoli' },
     { type: 'Vegetable', name: 'Mushroom' },
@@ -17,16 +24,16 @@ const items = [
 
 export default function TodoList() {
     const [availableItems, setAvailableItems] = useState(items);
-    const [selectedItems, setSelectedItems] = useState({
+    const [selectedItems, setSelectedItems] = useState<Record<ItemType, Item[]>>({
         Fruit: [],
         Vegetable: []
     });
 
-    const handleSelect = (item) => {
+    const handleSelect = (item: Item) => {
         setAvailableItems((prev) => prev.filter((i) => i.name !== item.name));
         setSelectedItems((prev) => ({
             ...prev,
-            [item.type]: [...prev[item.type], item]
+            [item.type]: [...prev[item.type], item] // No more Type error
         }));
 
         setTimeout(() => {
@@ -34,18 +41,27 @@ export default function TodoList() {
         }, 5000);
     };
 
-    const handleDeselect = (item) => {
+    const handleDeselect = (item: Item) => {
         setSelectedItems((prev) => ({
             ...prev,
             [item.type]: prev[item.type].filter((i) => i.name !== item.name)
         }));
-        setAvailableItems((prev) => [...prev, item]);
+
+        setAvailableItems((prev) => {
+            // ตรวจสอบว่ามี item นี้ใน availableItems อยู่แล้วหรือไม่
+            if (!prev.some((i) => i.name === item.name && i.type === item.type)) {
+                return [...prev, item];
+            }
+            return prev;
+        });
     };
+
 
     return (
         <div>
             <h2>Todo List</h2>
             <div style={{ display: 'flex', gap: '2rem' }}>
+                {/* Available Items */}
                 <div>
                     <h3>Available Items</h3>
                     <ul>
@@ -55,30 +71,30 @@ export default function TodoList() {
                                 onClick={() => handleSelect(item)}
                                 style={{cursor: 'pointer'}}
                             >
-                                {item.name}
+                                {item.name} 
                             </li>
                         ))}
                     </ul>
                 </div>
 
-                {/*Vegetable */}
+                {/* Vegetables */}
                 <div>
                     <h3>Vegetables</h3>
                     <ul>
                         {selectedItems.Vegetable.map((item) => (
-                            <li key={item.name} onClick={() => handleDeselect(item)} style={{ cursor: 'pointer' }}>
+                            <li key={`${item.name}-${item.type}`} onClick={() => handleDeselect(item)} style={{ cursor: 'pointer' }}>
                                 {item.name}
                             </li>
                         ))}
                     </ul>
                 </div>
 
-                {/*  Fruit */}
+                {/* Fruits */}
                 <div>
                     <h3>Fruits</h3>
                     <ul>
                         {selectedItems.Fruit.map((item) => (
-                            <li key={item.name} onClick={() => handleDeselect(item)} style={{ cursor: 'pointer' }}>
+                            <li key={`${item.name}-${item.type}`} onClick={() => handleDeselect(item)} style={{ cursor: 'pointer' }}>
                                 {item.name}
                             </li>
                         ))}
